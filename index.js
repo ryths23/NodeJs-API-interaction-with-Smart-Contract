@@ -19,10 +19,6 @@ app.get('/tasks/read/:id', async(req,res)=>{
     try{
         const id=req.params.id;
         const task=await contractinsstance.readTask(id);
-        // let t = []
-        // t[0] = task[0];
-        // t[1] = parseInt(task[1]);
-        // t[2] = parseInt(task[2]);
         res.send(task);
     }catch(error){
         res.status(500).send(error.message);
