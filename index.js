@@ -15,6 +15,14 @@ const express=require('express');
 const app=express();
 app.use(express.json());
 
+app.get('/tasks/readAll', async(req,res)=>{
+    try{
+        const task=await contractinsstance.readAllTask();
+        res.send(task);
+    }catch(error){
+        res.status(500).send(error.message);
+    }
+})
 app.get('/tasks/read/:id', async(req,res)=>{
     try{
         const id=req.params.id;
@@ -27,8 +35,10 @@ app.get('/tasks/read/:id', async(req,res)=>{
 
 app.post('/tasks/create', async(req,res)=>{
     try{
-        const {name,title,condition,reward}=req.body;
-        const task=await contractinsstance.createTask(name,title,condition,reward);
+        const {authorName,description,deadline,reward}=req.body;
+        const task=await contractinsstance.createTask(authorName,description,deadline,reward);
+        // const {name,title,condition,reward}=req.body;
+        // const task=await contractinsstance.createTask(name,title,condition,reward);
         await task.wait();
         res.send({success:true});
     }catch(error){
@@ -39,8 +49,10 @@ app.post('/tasks/create', async(req,res)=>{
 app.put('/tasks/update/:id',async(req,res)=>{
     try{
         const id=req.params.id;
-        const {name,title,condition,reward}=req.body;
-        const task=await contractinsstance.updateTask(id,name,title,condition,reward);
+        const {authorName,description,deadline,reward}=req.body;
+        const task=await contractinsstance.updateTask(id,authorName,description,deadline,reward);
+        // const {name,title,condition,reward}=req.body;
+        // const task=await contractinsstance.updateTask(id,name,title,condition,reward);
         await task.wait();
         res.send({success:true});
     }catch(error){
