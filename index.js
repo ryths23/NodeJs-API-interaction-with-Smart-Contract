@@ -35,10 +35,8 @@ app.get('/tasks/read/:id', async(req,res)=>{
 
 app.post('/tasks/create', async(req,res)=>{
     try{
-        const {authorName,description,deadline,reward}=req.body;
-        const task=await contractinsstance.createTask(authorName,description,deadline,reward);
-        // const {name,title,condition,reward}=req.body;
-        // const task=await contractinsstance.createTask(name,title,condition,reward);
+        const {title,weightage,authorName,description,deadline,reward}=req.body;
+        const task=await contractinsstance.createTask(title,weightage,authorName,description,deadline,reward);
         await task.wait();
         res.send({success:true});
     }catch(error){
@@ -49,10 +47,8 @@ app.post('/tasks/create', async(req,res)=>{
 app.put('/tasks/update/:id',async(req,res)=>{
     try{
         const id=req.params.id;
-        const {authorName,description,deadline,reward}=req.body;
-        const task=await contractinsstance.updateTask(id,authorName,description,deadline,reward);
-        // const {name,title,condition,reward}=req.body;
-        // const task=await contractinsstance.updateTask(id,name,title,condition,reward);
+        const {title,weightage,authorName,description,deadline,reward}=req.body;
+        const task=await contractinsstance.updateTask(id,titile,weightage,authorName,description,deadline,reward);
         await task.wait();
         res.send({success:true});
     }catch(error){
