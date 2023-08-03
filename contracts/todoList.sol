@@ -6,16 +6,16 @@ contract list{
         string authorName;
         address authorAddress;
         string description;
-        condition[] conditionList;
         uint deadline;
+        Condition[] conditionList;
         uint reward;
         bool isCompleted;
     }
-    struct condition{
+    struct Condition{
         string title;
         uint weightage;
     }
-    struct customer{
+    struct Customer{
         address cus;
         bool[] condition;
         uint timestamp;
@@ -28,31 +28,42 @@ contract list{
     }
     mapping(uint=>bool) public taskPresent;
     mapping(uint=>Task) public taskList;
-    mapping(uint=>customer[]) public customerList;
+    mapping(uint=>Customer[]) public customerList;
 
     modifier onlyOwner {
         require(msg.sender==owner);
         _;
     }
-    function createTask(string memory authorName, string memory description,condition[] memory conditionList,uint deadline,uint reward) public onlyOwner{     
+    function createTask(string[] memory title, uint[] memory weightage,string memory authorName, string memory description,uint deadline,uint reward) public onlyOwner{     
         taskPresent[lastIndex]=true;
-        Task memory newTask=Task(lastIndex,authorName,owner,description,conditionList,deadline,reward,false);
+        Task storage newTask=taskList[lastIndex];
+        newTask.authorName=authorName;
+        newTask.description=description;
+        newTask.deadline=deadline;
+        newTask.reward=reward;
+        newTask.isCompleted=false;
+        for(uint i=0;i<title.length;i++){
+            newTask.conditionList.push(Condition(title[i],weightage[i]));
+        }
+        newTask.authorAddress=owner;
         taskList[lastIndex]=newTask;
         lastIndex++;   
     }
     function readTask(uint taskID) external view returns (Task memory){
         return taskList[taskID];
     }
-    function readAllTask() public  view returns (Task[] memory){
-        Task[] memory taskitems;
-        for(uint i=0;i<lastIndex;i++){
-            taskitems[i]=taskList[i];       
-        }
-        return taskitems;
-    }
-    function updateTask(uint taskID,string memory authorName, string memory description,condition[] memory conditionList,uint deadline,uint reward) public onlyOwner{
+    function updateTask(uint taskID,string[] memory title, uint[] memory weightage,string memory authorName, string memory description,uint deadline,uint reward) public onlyOwner{
         require(owner==taskList[taskID].authorAddress,"Unauthorized indentity");
-        Task memory newTask=Task(taskID,authorName,owner,description,conditionList,deadline,reward,false);
+        Task storage newTask=taskList[taskID];
+        newTask.authorName=authorName;
+        newTask.description=description;
+        newTask.deadline=deadline;
+        newTask.reward=reward;
+        newTask.isCompleted=false;
+        for(uint i=0;i<title.length;i++){
+            newTask.conditionList.push(Condition(title[i],weightage[i]));
+        }
+        newTask.authorAddress=owner;
         taskList[taskID]=newTask;
     }
     function deleteTask(uint taskID) public onlyOwner{
@@ -61,14 +72,15 @@ contract list{
         delete taskList[taskID]; 
     }
     function addCustomer(uint taskID,bool[] memory condition) public{
-        customer memory newCustomer=customer(owner,condition,block.timestamp);
+        Customer memory newCustomer=Customer(owner,condition,block.timestamp);
         customerList[taskID].push(newCustomer);
     }
-    function getAllCustomers(uint taskID) external view returns(customer[] memory){
+    function getAllCustomers(uint taskID) external view returns(Customer[] memory){
         return customerList[taskID];
     }
-    function changeState(uint taskID) public onlyOwner{
+    function toggleState(uint taskID) public onlyOwner{
         require(owner==taskList[taskID].authorAddress,"Unauthorized indentity");
-        taskList[taskID].isCompleted=true;
+        Task storage tempTask=taskList[taskID];
+        tempTask.isCompleted=!tempTask.isCompleted;
     }
 }
