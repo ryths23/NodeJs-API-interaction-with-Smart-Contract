@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
-contract list{
+contract todoList{
     struct Task{
         uint taskID;
         string authorName;
