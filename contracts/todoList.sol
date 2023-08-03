@@ -1,55 +1,86 @@
-// SPDX-License-Identifier: SEE LICENSE IN LICENSE
-
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
-contract todoList{
-    uint256 public count = 0;
+contract list{
     struct Task{
-        string name;
-        string title;
-        string conditions;
-        uint256 reward;
-        address author;
+        uint taskID;
+        string authorName;
+        address authorAddress;
+        string description;
+        uint deadline;
+        Condition[] conditionList;
+        uint reward;
+        bool isCompleted;
     }
+    struct Condition{
+        string title;
+        uint weightage;
+    }
+    struct Customer{
+        address cus;
+        bool[] condition;
+        uint timestamp;
+    }
+    uint public lastIndex=0;
     address owner;
+    
     constructor(){
         owner=msg.sender;
     }
+    mapping(uint=>bool) public taskPresent;
+    mapping(uint=>Task) public taskList;
+    mapping(uint=>Customer[]) public customerList;
 
-    mapping (uint256=>bool) public taskPresent;
-    mapping (uint256=>Task) public taskList;
-
-    event Action(uint256 taskID,string actionType);
     modifier onlyOwner {
         require(msg.sender==owner);
         _;
     }
-    function createTask(string memory name, string memory title,string memory condition, uint256 reward) public onlyOwner {
-        require(bytes(name).length>0,"Name of the user cannot be empty");
-        require(bytes(title).length>0,"Task cannot be empty");
-        require(bytes(condition).length>0,"Task condition cannot be empty");
-        Task memory newTask=Task(name,title,condition,reward,owner);
-        taskList[count]=newTask;
-        taskPresent[count]=true;
-        count++;
-        emit Action(count,"Task Created");
+    function createTask(string[] memory title, uint[] memory weightage,string memory authorName, string memory description,uint deadline,uint reward) public onlyOwner{     
+        taskPresent[lastIndex]=true;
+        Task storage newTask=taskList[lastIndex];
+        newTask.authorName=authorName;
+        newTask.description=description;
+        newTask.deadline=deadline;
+        newTask.reward=reward;
+        newTask.isCompleted=false;
+        for(uint i=0;i<title.length;i++){
+            newTask.conditionList.push(Condition(title[i],weightage[i]));
+        }
+        newTask.authorAddress=owner;
+        taskList[lastIndex]=newTask;
+        lastIndex++;   
     }
-
-    function readTask(uint256 taskID) external view returns (Task memory){
-        require(taskPresent[taskID],"Invalid taskID");
+    function readTask(uint taskID) external view returns (Task memory){
         return taskList[taskID];
     }
-
-    function updateTask(uint256 taskID,string memory name, string memory title,string memory condition, uint256 reward) public onlyOwner{
-        require(taskPresent[taskID],"invalid taskId");
-        require(taskList[taskID].author==owner,"Unauthorized Identity, cannot update the task");
-        taskList[taskID]=Task(name,title,condition,reward,owner);
-        emit Action(taskID,"Task Updated");
-
+    function updateTask(uint taskID,string[] memory title, uint[] memory weightage,string memory authorName, string memory description,uint deadline,uint reward) public onlyOwner{
+        require(owner==taskList[taskID].authorAddress,"Unauthorized indentity");
+        Task storage newTask=taskList[taskID];
+        newTask.authorName=authorName;
+        newTask.description=description;
+        newTask.deadline=deadline;
+        newTask.reward=reward;
+        newTask.isCompleted=false;
+        for(uint i=0;i<title.length;i++){
+            newTask.conditionList.push(Condition(title[i],weightage[i]));
+        }
+        newTask.authorAddress=owner;
+        taskList[taskID]=newTask;
     }
-    function deleteTask(uint256 taskID) public onlyOwner{
-        require(taskList[taskID].author==owner,"Unauthorized Identity, cannot delete the task");
-        taskPresent[taskID]=false;
-        delete taskList[taskID];
-        emit Action(taskID,"Task Deleted");
+    function deleteTask(uint taskID) public onlyOwner{
+        require(owner==taskList[taskID].authorAddress,"Unauthorized indentity");
+        delete taskPresent[taskID];
+        delete taskList[taskID]; 
+    }
+    function addCustomer(uint taskID,bool[] memory condition) public{
+        Customer memory newCustomer=Customer(owner,condition,block.timestamp);
+        customerList[taskID].push(newCustomer);
+    }
+    function getAllCustomers(uint taskID) external view returns(Customer[] memory){
+        return customerList[taskID];
+    }
+    function toggleState(uint taskID) public onlyOwner{
+        require(owner==taskList[taskID].authorAddress,"Unauthorized indentity");
+        Task storage tempTask=taskList[taskID];
+        tempTask.isCompleted=!tempTask.isCompleted;
     }
 }
